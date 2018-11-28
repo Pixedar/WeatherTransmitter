@@ -32,6 +32,7 @@ int windCounter2 = 0;
 int rainSensorDealy = 35;
 byte rainCounter = 0;
 boolean windCont = false;  /////////////
+
 void setup()
 {
   mySerial.begin(76800);    
@@ -42,7 +43,8 @@ void setup()
 // mySerial.print("AT+B38400");
 //  delay(800);
   
-
+  mySerial.write(255);
+  
   pinMode(WIND_SENSOR_PIN, INPUT);
   pinMode(RAIN_SENSOR_PIN, INPUT);
 
@@ -55,18 +57,20 @@ void setup()
 
   windState2 = windState1;
 
-  mySerial.write(255);
+
   dhtRead();
   
   windTime = millis();
   qTime = millis();
   dhtTime = millis();  
 }
+///pomiar czasu micros wynik przemnożyc x2
+//main loop od 36 do 62 (czasami nawet 1200) , max 3400 podczas pomiaru dht
 
-//unsigned long dth =0;                   /////////////////////////////////
+unsigned long t = 0; //////////
+
 void loop()
 {
- //dth = millis();                                   //////////////////////////////////
   if (millis() > qTime + transmitInterval) {
      sendData();
      
@@ -104,13 +108,11 @@ void loop()
   }
   if (rainState1 != rainState2 && millis() > rainSensorDealyTime + rainSensorDealy ) {
     rainCounter++;
-   // Serial.println(rainCounter);
     rainSensorDealyTime = millis();
   }
   rainState2 = rainState1;
- // if(millis() - dth > 1){
-//  Serial.println(millis() - dth); ////////////////////////////////////////////////////////
-//  }
+
+
 }
 
 
@@ -263,9 +265,9 @@ void sendLastData(){
   if(temp >=0){
      mySerial.write(floor(temp));
   }else{
-     mySerial.write(floor(temp)+200);
+     mySerial.write(floor(abs(temp))+50);
   }  
-   mySerial.write((temp - floor(temp))*100);   
+   mySerial.write((abs(temp) - floor(abs(temp)))*100);  
   if(!windCont){
    mySerial.write(floor(wind));
    mySerial.write((wind - floor(wind))*100);  
@@ -286,10 +288,10 @@ void sendData(){
   if(temp >=0){
      mySerial.write(floor(temp));
   }else{
-     mySerial.write(floor(temp)+200);
+      mySerial.write(floor(abs(temp))+50);
   }
    
-   mySerial.write((temp - floor(temp))*100);
+   mySerial.write((abs(temp) - floor(abs(temp)))*100);
    
   if(!windCont){
    wind = windSum / windCounter2;
@@ -357,5 +359,8 @@ String checkDHT(int chk){
         return "Unknown error";
     }
 }
-
+//opis kabelkow do wgrywania 
+//reset - jasnoniebieski kabelek polaczony na koncu z czarnym
+//rx - ciemnoniebieski poloczony na koncu z zielonym
+//tx - pomaranczowy polonaczony na koncu z zielonym
 
